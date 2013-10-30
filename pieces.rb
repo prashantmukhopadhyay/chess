@@ -216,7 +216,9 @@ class Pawn < SteppingPiece
       return []
     end
 
-    if pos[0] == 6
+    if pos[0] == 6 && color == "black"
+      moves << [pos[0] + dir[0] * 2, pos[1] + dir[1]]
+    elsif pos[0] == 1 && color == "white"
       moves << [pos[0] + dir[0] * 2, pos[1] + dir[1]]
     end
 

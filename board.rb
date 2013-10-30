@@ -25,8 +25,6 @@ class Board
   def move(color, from, to)
     from = parse_move(from)
     to = parse_move(to)
-    p from
-    p to
 
     piece = nil
     case color
