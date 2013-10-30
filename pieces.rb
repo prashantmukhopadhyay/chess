@@ -49,8 +49,9 @@ class SlidingPiece < Piece
         tpos = [x,y]
         if tpos[0].between?(0,7) && tpos[1].between?(0,7)
           possible_moves << tpos unless board[tpos].is_a?(Piece)
-          if !board[tpos].nil?
+          if board[tpos].is_a?(Piece)
             possible_moves << tpos if board[tpos].color != self.color
+            break
           end
         end
       end

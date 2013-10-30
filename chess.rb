@@ -28,12 +28,25 @@ class Game
     until @board.checkmate?('black') || @board.checkmate?('white')
       @players.each do |player|
         @board.display
-        m = player.play_turn
-        @board.move(player.color, m[0], m[1])
+        begin
+          m = player.play_turn
+          @board.move(player.color, m[0], m[1])
+        rescue ArgumentError
+          p "Enter a valid coordinates!"
+          retry
+        rescue NoPieceError
+          p "Select one of your pieces!"
+          retry
+        rescue NoValidMoveError
+          p "Cannot move there!"
+          retry
+        end
       end
     end
   end
 end
+
+
 
 g = Game.new
 g.play

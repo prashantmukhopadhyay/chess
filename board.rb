@@ -17,8 +17,14 @@ class Board
   def parse_move(move)
     index_wise = []
     components = move.split('')
-    index_wise << components[1].to_i - 1
-    index_wise << COLUMNS.index(components[0])
+
+    row = components[1].to_i - 1
+    col = COLUMNS.index(components[0])
+
+    raise ArgumentError if !row.between?(0,7) || !col.between?(0,7)
+
+    index_wise << row
+    index_wise << col
     index_wise
   end
 
@@ -27,19 +33,19 @@ class Board
     to = parse_move(to)
 
     piece = nil
-    case color
-    when 'white'
-      piece = white_pieces.select {|piece| piece.pos == from }[0]
-    else
-      piece = black_pieces.select {|piece| piece.pos == from }[0]
-    end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+
+    piece = color_set.select {|piece| piece.pos == from }[0]
+
+    raise NoPieceError if piece == nil
+    p piece.valid_moves(self)
+    raise NoValidMoveError if piece.valid_moves(self).empty?
 
     if piece.valid_moves(self).include?(to)
       piece.pos = to
       self[from] = nil
       self[to] = piece
     end
-    piece
   end
 
   def checkmate?(color)
@@ -80,97 +86,65 @@ class Board
   end
 
   def place_pawns(color)
-    case color
-    when 'white'
-      (0..7).each do |col|
-        piece = Pawn.new(color, [1,col])
-        @white_pieces << piece
-        set(piece)
-      end
-    else
-      (0..7).each do |col|
-        piece = Pawn.new(color, [6,col])
-        @black_pieces << piece
-        set(piece)
-      end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 1 : 6 )
+
+    (0..7).each do |col|
+      piece = Pawn.new(color, [row, col])
+      color_set << piece
+      set(piece)
     end
   end
 
   def place_rooks(color)
-    case color
-    when 'white'
-      [0,7].each do |col|
-        piece = Rook.new(color, [0,col])
-        @white_pieces << piece
-        set(piece)
-      end
-    else
-      [0,7].each do |col|
-        piece = Rook.new(color, [7, col])
-        @black_pieces << piece
-        set(piece)
-      end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 0 : 7 )
+
+    [0,7].each do |col|
+      piece = Rook.new(color, [row, col])
+      color_set << piece
+      set(piece)
     end
   end
 
   def place_bishops(color)
-    case color
-    when 'white'
-      [2,5].each do |col|
-        piece = Bishop.new(color, [0,col])
-        @white_pieces << piece
-        set(piece)
-      end
-    else
-      [2,5].each do |col|
-        piece = Bishop.new(color, [7, col])
-        @black_pieces << piece
-        set(piece)
-      end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 0 : 7 )
+
+    [2,5].each do |col|
+      piece = Bishop.new(color, [row, col])
+      color_set << piece
+      set(piece)
     end
   end
 
   def place_knights(color)
-    case color
-    when 'white'
-      [1,6].each do |col|
-        piece = Knight.new(color, [0,col])
-        @white_pieces << piece
-        set(piece)
-      end
-    else
-      [1,6].each do |col|
-        piece = Knight.new(color, [7, col])
-        @black_pieces << piece
-        set(piece)
-      end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 0 : 7 )
+
+    [1,6].each do |col|
+      piece = Knight.new(color, [row, col])
+      color_set << piece
+      set(piece)
     end
   end
 
   def place_king(color)
-    case color
-    when 'white'
-      piece = King.new(color, [0,4])
-      @white_pieces << piece
-      set(piece)
-    else
-      piece = King.new(color, [7,4])
-      @black_pieces << piece
-      set(piece)
-    end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 0 : 7 )
+
+    piece = King.new( color, [row, 4] )
+    color_set << piece
+    set(piece)
   end
 
   def place_queen(color)
-    case color
-    when 'white'
-      piece = Queen.new(color, [0,3])
-      @white_pieces << piece
-      set(piece)
-    else
-      piece = Queen.new(color, [7,3])
-      @black_pieces << piece
-      set(piece)
-    end
+    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    row = ( color == "white" ? 0 : 7 )
+
+    piece = Queen.new( color, [row, 3] )
+    color_set << piece
+    set(piece)
   end
 
   def display
@@ -223,6 +197,13 @@ class Board
     temp.black_pieces = @black_pieces.dd_map
     temp
   end
+end
+
+class NoPieceError < StandardError
+end
+
+
+class NoValidMoveError < StandardError
 end
 
 class Array
