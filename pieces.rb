@@ -1,4 +1,4 @@
-require './board.rb'
+#require './board.rb'
 
 class Piece
   attr_reader :color

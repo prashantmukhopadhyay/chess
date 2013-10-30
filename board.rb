@@ -20,37 +20,37 @@ class Board
 
     row = components[1].to_i - 1
     col = COLUMNS.index(components[0])
+    bound_condt = row.between?(0,7) && col.between?(0,7)
+    nil_condt = row.nil? || col.nil?
 
-    raise ArgumentError if row.nil? || col.nil? || !row.between?(0,7) || !col.between?(0,7)
+    raise ArgumentError if nil_condt || bound_condt
 
-    index_wise << row
-    index_wise << col
-    index_wise
+    index_wise << row << col
+  end
+
+  def color_set(color)
+    color == 'white' ? @white_pieces : @black_pieces
+  end
+
+  def other_color_set(color)
+    color != 'white' ? @white_pieces : @black_pieces
   end
 
   def move(color, from, to)
-    from = parse_move(from)
-    to = parse_move(to)
+    from, to = parse_move(from), parse_move(to)
 
-    piece = nil
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+    piece = color_set(color).select { |piece| piece.pos == from }[0]
 
-    piece = color_set.select {|piece| piece.pos == from }[0]
-
-    raise NoPieceError if piece == nil
+    raise NoPieceError if piece.nil?
 
     raise NoValidMoveError if piece.valid_moves(self).empty?
-
-      # p piece.valid_moves(self).include?(to)
-      # p self[to]
 
     if piece.valid_moves(self).include?(to)
       if self[to].is_a?(Piece)
         if piece.is_a?(Rook) && self[to].is_a?(King) && piece.can_castle?
           piece.castle(self, from, to)
         else
-          other_color_set = (color != 'white' ? @white_pieces : @black_pieces)
-          other_color_set.delete_if { |el| el == self[to] }
+          other_color_set(color).delete_if { |el| el == self[to] }
           move_to(piece, from, to)
         end
       else
@@ -69,28 +69,15 @@ class Board
   end
 
   def checkmate?(color)
-    case color
-    when 'white'
-      checked?(color) && @white_pieces.all? { |piece| piece.valid_moves(self).empty? }
-    else
-      checked?(color) && @black_pieces.all? { |piece| piece.valid_moves(self).empty? }
-    end
+    checked?(color) && color_set(color).all? { |piece| piece.valid_moves(self).empty? }
   end
 
   def checked?(color)
     enemy_moves = []
-    king_pos = nil
-    if color == 'white'
-      king = @white_pieces.select { |piece| piece.is_a?(King) }[0]
-      @black_pieces.each do |piece|
-        enemy_moves += piece.moves(self)
-      end
-    else
-      king = @black_pieces.select { |piece| piece.is_a?(King) }[0]
-      @white_pieces.each do |piece|
-        enemy_moves += piece.moves(self)
-      end
-    end
+
+    king = color_set.(color).select { |piece| piece.is_a?(King) }[0]
+    other_color_set(color).each { |piece| enemy_moves += piece.moves(self) }
+
     enemy_moves.include?(king.pos)
   end
 
@@ -106,96 +93,93 @@ class Board
   end
 
   def place_pawns(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
     row = ( color == "white" ? 1 : 6 )
-
     (0..7).each do |col|
       piece = Pawn.new(color, [row, col])
-      color_set << piece
+      color_set(color) << piece
       set(piece)
     end
   end
 
-  def place_rooks(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
+  def row_num(color)
     row = ( color == "white" ? 0 : 7 )
+  end
 
+  def place_rooks(color)
     [0,7].each do |col|
-      piece = Rook.new(color, [row, col])
-      color_set << piece
+      piece = Rook.new(color, [row_num(color), col])
+      color_set(color) << piece
       set(piece)
     end
   end
 
   def place_bishops(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
-    row = ( color == "white" ? 0 : 7 )
-
     [2,5].each do |col|
-      piece = Bishop.new(color, [row, col])
-      color_set << piece
+      piece = Bishop.new(color, [row_num(color), col])
+      color_set(color) << piece
       set(piece)
     end
   end
 
   def place_knights(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
-    row = ( color == "white" ? 0 : 7 )
-
     [1,6].each do |col|
-      piece = Knight.new(color, [row, col])
-      color_set << piece
+      piece = Knight.new(color, [row_num(color), col])
+      color_set(color) << piece
       set(piece)
     end
   end
 
   def place_king(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
-    row = ( color == "white" ? 0 : 7 )
-
-    piece = King.new( color, [row, 4] )
-    color_set << piece
+    piece = King.new(color, [row_num(color), 4])
+    color_set(color) << piece
     set(piece)
   end
 
   def place_queen(color)
-    color_set = (color == 'white' ? @white_pieces : @black_pieces)
-    row = ( color == "white" ? 0 : 7 )
-
-    piece = Queen.new( color, [row, 3] )
-    color_set << piece
+    piece = Queen.new(color, [row_num(color), 3])
+    color_set(color) << piece
     set(piece)
   end
 
   def display
-    print "  |"
-    COLUMNS.each do |letter|
-      print letter + " "
-    end
-    puts
-    puts "-" * 18
-    @board.each_with_index do |row, y|
-      print "#{y+1} |"
-      row.each_with_index do |tile, x|
-        print "#{tile.char} " unless tile.nil?
-        if tile.nil?
-          if y % 2 == 0
-            if x % 2 == 0
-              print WHITE_TILE + " "
-            else
-              print BLACK_TILE + " "
-            end
-          else
-            if x % 2 == 0
-              print BLACK_TILE + " "
-            else
-              print WHITE_TILE + " "
-            end
-          end
-        end
-      end
-      puts
-    end
+    # color_idx = -1
+#     (0..7).each do |row|
+#       (0..7).each do |col|
+#         color_idx *= -1
+#         next unless self[[row,col]].nil?
+#         print (color_idx > 0 ? WHITE_TILE : BLACK_TILE), " "
+#       end
+#       puts
+#     end
+
+     print "  |"
+     COLUMNS.each do |letter|
+       print letter + " "
+     end
+     puts
+     puts "-" * 18
+     @board.each_with_index do |row, y|
+       print "#{y+1} |"
+       row.each_with_index do |tile, x|
+         print "#{tile.char} " unless tile.nil?
+         if tile.nil?
+           if y % 2 == 0
+             if x % 2 == 0
+               print WHITE_TILE + " "
+             else
+               print BLACK_TILE + " "
+             end
+           else
+             if x % 2 == 0
+               print BLACK_TILE + " "
+             else
+               print WHITE_TILE + " "
+             end
+           end
+         end
+       end
+       puts
+     end
   end
 
   def set(piece)
@@ -213,15 +197,13 @@ class Board
   def dup
     temp = Board.new
     temp.board = @board.dd_map
-    temp.white_pieces = @white_pieces.dd_map
-    temp.black_pieces = @black_pieces.dd_map
-    temp
+    temp.white_pieces = color_set('white').dup
+    temp.black_pieces = color_set('black').dup
   end
 end
 
 class NoPieceError < StandardError
 end
-
 
 class NoValidMoveError < StandardError
 end
