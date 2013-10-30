@@ -29,6 +29,7 @@ class Game
       @players.each do |player|
         @board.display
         begin
+          puts "#{player.color.capitalize} Player's Turn"
           m = player.play_turn
           @board.move(player.color, m[0], m[1])
         rescue ArgumentError
@@ -43,6 +44,9 @@ class Game
         end
       end
     end
+    puts "#{@board.checkmate?('white') ? "Black" : "White"} WINS!"
+
+    @board.display
   end
 end
 

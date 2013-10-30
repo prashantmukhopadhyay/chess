@@ -21,7 +21,7 @@ class Board
     row = components[1].to_i - 1
     col = COLUMNS.index(components[0])
 
-    raise ArgumentError if !row.between?(0,7) || !col.between?(0,7)
+    raise ArgumentError if row.nil? || col.nil? || !row.between?(0,7) || !col.between?(0,7)
 
     index_wise << row
     index_wise << col
