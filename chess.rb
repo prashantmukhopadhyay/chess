@@ -11,9 +11,9 @@ class HumanPlayer
   def play_turn
     move = []
     puts "From where?"
-    move << gets.chomp.split(',').map(&:to_i)
+    move << gets.chomp
     puts "To where?"
-    move << gets.chomp.split(',').map(&:to_i)
+    move << gets.chomp
     move
   end
 end

@@ -216,9 +216,13 @@ class Pawn < SteppingPiece
       return []
     end
 
+    if pos[0] == 6
+      moves << [pos[0] + dir[0] * 2, pos[1] + dir[1]]
+    end
+
     [1,-1].each do |d|
       if (pos[1] + d).between?(0,7)
-        diag_pos = [pos[0] + move_dirs[0], pos[1] + d]
+        diag_pos = [pos[0] + dir[0], pos[1] + d]
         moves << diag_pos if board[diag_pos].is_a?(Piece) && board[diag_pos].color != self
       end
     end

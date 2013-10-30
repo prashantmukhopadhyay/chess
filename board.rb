@@ -1,6 +1,10 @@
 require './pieces.rb'
 
 class Board
+  WHITE_TILE = "\u25A1"
+  BLACK_TILE = "\u25A0"
+  COLUMNS = %w[a b c d e f g h]
+
   attr_accessor :board, :white_pieces, :black_pieces
 
   def initialize
@@ -10,7 +14,20 @@ class Board
     place_pieces
   end
 
+  def parse_move(move)
+    index_wise = []
+    components = move.split('')
+    index_wise << components[1].to_i - 1
+    index_wise << COLUMNS.index(components[0])
+    index_wise
+  end
+
   def move(color, from, to)
+    from = parse_move(from)
+    to = parse_move(to)
+    p from
+    p to
+
     piece = nil
     case color
     when 'white'
@@ -18,8 +35,7 @@ class Board
     else
       piece = black_pieces.select {|piece| piece.pos == from }[0]
     end
-    p self[from]
-    p piece
+
     if piece.valid_moves(self).include?(to)
       piece.pos = to
       self[from] = nil
@@ -160,10 +176,31 @@ class Board
   end
 
   def display
-    @board.each do |row|
-      row.each do |tile|
+    print "  |"
+    COLUMNS.each do |letter|
+      print letter + " "
+    end
+    puts
+    puts "-" * 18
+    @board.each_with_index do |row, y|
+      print "#{y+1} |"
+      row.each_with_index do |tile, x|
         print "#{tile.char} " unless tile.nil?
-        print "  " if tile.nil?
+        if tile.nil?
+          if y % 2 == 0
+            if x % 2 == 0
+              print WHITE_TILE + " "
+            else
+              print BLACK_TILE + " "
+            end
+          else
+            if x % 2 == 0
+              print BLACK_TILE + " "
+            else
+              print WHITE_TILE + " "
+            end
+          end
+        end
       end
       puts
     end
