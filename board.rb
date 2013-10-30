@@ -38,14 +38,24 @@ class Board
     piece = color_set.select {|piece| piece.pos == from }[0]
 
     raise NoPieceError if piece == nil
-    p piece.valid_moves(self)
+
     raise NoValidMoveError if piece.valid_moves(self).empty?
 
+
+
     if piece.valid_moves(self).include?(to)
-      piece.pos = to
-      self[from] = nil
-      self[to] = piece
-      piece.moved = true
+      if piece.is_a?(Rook) && board[to].is_a?(King) && piece.can_castle?
+        piece.castle(self, from, to)
+      else
+        piece.pos = to
+        self[from] = nil
+        other_color_set = (color != 'white' ? @white_pieces : @black_pieces)
+        other_color_set.delete_if { |el| el == self[to] }
+        self[to] = piece
+        piece.moved = true
+      end
+    else
+      raise NoValidMoveError
     end
   end
 

@@ -56,7 +56,7 @@ class SlidingPiece < Piece
           possible_moves << tpos unless board[tpos].is_a?(Piece)
           if board[tpos].is_a?(Piece)
             if self.is_a?(Rook) && board[tpos].is_a?(King)
-              possible_moves << tpos if board[tpos].color == self.color && can_castle?
+              possible_moves << tpos if can_castle?
             else
               possible_moves << tpos if board[tpos].color != self.color
             end
@@ -133,10 +133,19 @@ class Rook < SlidingPiece
     true
   end
 
-  def castle()
-    return nil unless can_castle?
-
-
+  def castle(board, from, to)
+    if pos[1] < board[to].pos[1]
+      board[from] = nil
+      board[[from[0],from[1]-1]] = board[to]
+      board[to] = self
+    else
+      board[from] = nil
+      board[[from[0],from[1]-1]] = board[to]
+      board[to] = self
+    end
+    pos = to
+    moved = true
+    board[to].moved = true
   end
 end
 
@@ -303,12 +312,14 @@ b[[0,1]] = k
 b.white_pieces << k
 b.display
 p b.checked?('white')
-=end
 
-=begin
-b = Board.new()
+
+
+b = Board.new
 
 b.board = Array.new(8) { Array.new(8) }
+b.black_pieces = []
+b.white_pieces = []
 
 q = Queen.new('black',[0,6])
 b[[0,6]] = q
@@ -325,6 +336,20 @@ b.white_pieces << p1
 p2 = Pawn.new('white',[1,1])
 b[[1,1]] = p2
 b.white_pieces << p2
+
+k2 = King.new('black',[7,7])
+b[[7,7]] = k2
+b.black_pieces << k2
+
+p3 = Pawn.new('black',[0,5])
+b[[0,5]] = p3
+b.black_pieces << p3
+
+
+b.display
+b.move('black', "g1", "g3")
+b.display
+p q.valid_moves(b)
 
 b.display
 p b.checked?("white")

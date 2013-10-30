@@ -27,8 +27,8 @@ class Game
   def play
     until @board.checkmate?('black') || @board.checkmate?('white')
       @players.each do |player|
-        @board.display
         begin
+          @board.display
           puts "#{player.color.capitalize} Player's Turn"
           m = player.play_turn
           @board.move(player.color, m[0], m[1])
