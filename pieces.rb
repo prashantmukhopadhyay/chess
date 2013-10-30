@@ -20,22 +20,22 @@ class Piece
 
   def move_into_check?(board, tpos)
     tboard = board.dup
-    tpiece = nil
-    case color
-    when 'white'
-      tpiece = tboard.white_pieces.select { |piece| piece.pos == pos }[0]
-    else
-      tpiece = tboard.black_pieces.select { |piece| piece.pos == pos }[0]
-    end
+
+    tpiece = tboard.color_set(color).select { |piece| piece.pos == pos }[0]
+    # case color
+#     when 'white'
+#       tpiece = tboard.white_pieces.select { |piece| piece.pos == pos }[0]
+#     else
+#       tpiece = tboard.black_pieces.select { |piece| piece.pos == pos }[0]
+#     end
     tpiece.pos = tpos
     tboard[pos] = nil
     tboard[tpos] = tpiece
     tboard.checked?(color)
-    false
   end
 
   def dup
-    self.class.new(@color, @pos)
+    self.class.new(color, pos)
   end
 end
 
@@ -47,21 +47,21 @@ class SlidingPiece < Piece
   def moves(board)
     possible_moves = []
     self.move_dirs.each do |dir|
+      #restart at original position
       tpos = @pos
-      until !tpos[0].between?(0,7) || !tpos[1].between?(0,7)
-        x = tpos[0] + dir[0]
-        y = tpos[1] + dir[1]
-        tpos = [x,y]
+      while tpos[0].between?(0,7) && tpos[1].between?(0,7)
+        # continuous motion in one direction
+        tpos[0] += dir[0]
+        tpos[1] += dir[1]
         if tpos[0].between?(0,7) && tpos[1].between?(0,7)
-          possible_moves << tpos unless board[tpos].is_a?(Piece)
-          if board[tpos].is_a?(Piece)
-            if self.is_a?(Rook) && board[tpos].is_a?(King)
-              possible_moves << tpos if can_castle?
-            else
-              possible_moves << tpos if board[tpos].color != self.color
-            end
-            break
+          if !board[tpos].is_a?(Piece)
+            possible_moves << tpos
+          elsif is_a?(Rook) && board[tpos].is_a?(King)
+            possible_moves << tpos if can_castle?
+          else
+            possible_moves << tpos if board[tpos].color != color
           end
+          break
         end
       end
     end
