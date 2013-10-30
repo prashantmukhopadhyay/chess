@@ -2,11 +2,16 @@ require './board.rb'
 
 class Piece
   attr_reader :color
-  attr_accessor :pos
+  attr_accessor :pos, :moved
+
+  def moved?
+    @moved
+  end
 
   def initialize(color, pos)
     @color = color
     @pos = pos
+    @moved = false
   end
 
   def valid_moves(board)
@@ -50,7 +55,11 @@ class SlidingPiece < Piece
         if tpos[0].between?(0,7) && tpos[1].between?(0,7)
           possible_moves << tpos unless board[tpos].is_a?(Piece)
           if board[tpos].is_a?(Piece)
-            possible_moves << tpos if board[tpos].color != self.color
+            if self.is_a?(Rook) && board[tpos].is_a?(King)
+              possible_moves << tpos if board[tpos].color == self.color && can_castle?
+            else
+              possible_moves << tpos if board[tpos].color != self.color
+            end
             break
           end
         end
@@ -77,6 +86,7 @@ end
 
 class Rook < SlidingPiece
   attr_reader :char
+  attr_accessor :moved
 
   @@dirs = [[0,1],[1,0],[0,-1],[-1,0]]
 
@@ -87,6 +97,46 @@ class Rook < SlidingPiece
 
   def move_dirs
     @@dirs
+  end
+
+  def can_castle?(board, from, to)
+    return false if board.checked?(color)
+
+    color_set = (color == 'white' ? board.white_pieces : board.white_pieces )
+    king = color_set.select { |piece| piece.is_a?(King)}[0]
+
+    return false if moved? || king.moved?
+
+    row = color == 'white' ? 0 : 7
+    if pos == [row,0]
+      left_rook_chk(row)
+    else
+      right_rook_chk(row)
+    end
+  end
+
+  def left_rook_chk(row)
+    (1..3).each do |idx|
+      if board[[row, idx]].is_a?(Piece)
+        return false
+      end
+    end
+    true
+  end
+
+  def right_rook_chk(row)
+    (5..6).each do |idx|
+      if board[[row, idx]].is_a?(Piece)
+        return false
+      end
+    end
+    true
+  end
+
+  def castle()
+    return nil unless can_castle?
+
+
   end
 end
 
@@ -143,13 +193,18 @@ class Knight < SteppingPiece
 end
 
 class King < SteppingPiece
-  attr_reader :char
+  attr_reader :char, :moved
+
+  def moved?
+    @moved
+  end
 
   @@dirs = [[-1,-1],[-1,1],[1,1],[1,-1],[0,1],[1,0],[0,-1],[-1,0]]
 
   def initialize(color, pos)
     super(color, pos)
     @char = color == 'white' ? "\u2654" : "\u265A"
+    @moved = false
   end
 
   def move_dirs

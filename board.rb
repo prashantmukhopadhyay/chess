@@ -45,6 +45,7 @@ class Board
       piece.pos = to
       self[from] = nil
       self[to] = piece
+      piece.moved = true
     end
   end
 
