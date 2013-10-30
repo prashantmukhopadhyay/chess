@@ -41,22 +41,31 @@ class Board
 
     raise NoValidMoveError if piece.valid_moves(self).empty?
 
-
+      # p piece.valid_moves(self).include?(to)
+      # p self[to]
 
     if piece.valid_moves(self).include?(to)
-      if piece.is_a?(Rook) && board[to].is_a?(King) && piece.can_castle?
-        piece.castle(self, from, to)
+      if self[to].is_a?(Piece)
+        if piece.is_a?(Rook) && self[to].is_a?(King) && piece.can_castle?
+          piece.castle(self, from, to)
+        else
+          other_color_set = (color != 'white' ? @white_pieces : @black_pieces)
+          other_color_set.delete_if { |el| el == self[to] }
+          move_to(piece, from, to)
+        end
       else
-        piece.pos = to
-        self[from] = nil
-        other_color_set = (color != 'white' ? @white_pieces : @black_pieces)
-        other_color_set.delete_if { |el| el == self[to] }
-        self[to] = piece
-        piece.moved = true
+        move_to(piece, from, to)
       end
+      piece.moved = true
     else
       raise NoValidMoveError
     end
+  end
+
+  def move_to(piece, from, to)
+    piece.pos = to
+    self[from] = nil
+    self[to] = piece
   end
 
   def checkmate?(color)

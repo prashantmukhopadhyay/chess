@@ -23,14 +23,14 @@ class Piece
     tpiece = nil
     case color
     when 'white'
-      tpiece = tboard.white_pieces.select {|piece| piece.pos == pos }[0]
+      tpiece = tboard.white_pieces.select { |piece| piece.pos == pos }[0]
     else
-      tpiece = tboard.black_pieces.select {|piece| piece.pos == pos }[0]
+      tpiece = tboard.black_pieces.select { |piece| piece.pos == pos }[0]
     end
     tpiece.pos = tpos
     tboard[pos] = nil
     tboard[tpos] = tpiece
-    return true if tboard.checked?(color)
+    tboard.checked?(color)
     false
   end
 
@@ -102,7 +102,7 @@ class Rook < SlidingPiece
   def can_castle?(board, from, to)
     return false if board.checked?(color)
 
-    color_set = (color == 'white' ? board.white_pieces : board.white_pieces )
+    color_set = (color == 'white' ? board.white_pieces : board.black_pieces )
     king = color_set.select { |piece| piece.is_a?(King)}[0]
 
     return false if moved? || king.moved?
